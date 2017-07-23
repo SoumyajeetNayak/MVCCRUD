@@ -1,0 +1,126 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/DataTables/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="~/Content/themes/base/jquery-ui.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div style="widows:90%; margin:0 auto" class="tableContiner">
+      <a class="popup btn btn-primary" href="/home/save/0" style="margin-bottom:20px; margin-top:20px;">Add New Employee</a>
+      
+
+     
+        <table id="myDatatable">
+          <thead>
+            <tr>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Email ID</th>
+              <th>City</th>
+              <th>Country</th>
+              <th>Edit</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
+        </table> 
+
+    </div>
+  <script src="~/Scripts/jquery-3.1.1.min.js"></script>
+  <script src="~/Scripts/jquery.validate.min.js"></script>
+  <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+  <script src="~/Scripts/DataTables/jquery.dataTables.min.js"></script>
+  <script src="~/Scripts/jquery-ui-1.12.1.min.js"></script>
+  
+  <script>
+    $(document).ready(function () {
+      var oTable = $('#myDatatable').DataTable({
+        "ajax": {
+          "url": '/home/GetEmployees',
+          "type": "GET",
+          "datatype": "json"
+        },
+        "columns": [
+          { "data": "FirstName", "autowidth": true },
+          { "data": "LastName", "autowidth": true },
+          { "data": "EmailID", "autowidth": true },
+          { "data": "City", "autowidth": true },
+          { "data": "Country", "autowidth": true },
+          {
+            "data": "EmployeeID", "width": "50px", "render": function (data) {
+              return '<a class="popup" href="/home/save/' + data + '">Edit</a>';
+            }
+          },
+          {
+            "data": "EmployeeID", "width": "50px", "render": function (data) {
+              return '<a class="popup" href="/home/delete/' + data + '">Delete</a>';
+            }
+          }
+        ]
+      });
+      $('.tableContiner').on('click', 'a.popup', function (e) {
+
+        e.preventDefault();
+        OpenPopUp($(this).attr('href'));
+      });
+      function OpenPopUp(pageurl) {
+        var $pageContent = $('<div/>');
+        $pageContent.load(pageurl, function () {
+          $('#popupForm', $pageContent).removeData('validator');
+          $('#popupForm', $pageContent).removeData('unobtrusiveValidation');
+          $.validator.unobtrusive.parse('form');
+
+        });
+
+        $dialog = $('<div class="popupWindow" style="overflow:auto"></div>')
+                  .html($pageContent)
+                  .dialog({
+                    draggable: false,
+                    autoOpen: false,
+                    resizable: false,
+                    model: true,
+                    title: 'PopUp Dialog',
+                    height: 550,
+                    width: 600,
+                    close: function () {
+                      $dialog.dialog('destroy').remove();
+                    }
+
+                  })
+
+        $('.popupWindow').on('submit', '#popupForm', function (e) {
+          var url = $('#popupForm')[0].action;
+          alert("url:" + url);
+          $.ajax({
+            "url": url,
+            "type": "POST",
+            "data": $('#popupForm').serialize(),
+            success: function (data) {
+              if (data.status) {
+                $dialog.dialog('close');
+                oTable.ajax.reload();
+              }
+            }
+          })
+          e.preventDefault();
+
+        })
+
+        $dialog.dialog('open');
+      }
+
+    })
+
+  </script>
+
+ <div style="margin-bottom:0px;margin-left:1050px;margin-top:95px;">Copyirght &copy; : Soumyajeet@Aptean</div> 
+</body>
+</html>
